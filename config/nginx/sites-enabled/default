@@ -1,0 +1,39 @@
+upstream phpfcgi {
+    server phpfpm:9000;
+}
+
+server {
+    listen 80;
+
+    root /home/http/localhost;
+
+    server_name localhost;
+
+    charset utf-8;
+
+    access_log /var/log/nginx/localhost-access.log;
+    error_log  /var/log/nginx/localhost-error.log error;
+
+    rewrite ^/app\.php/?(.*)$ /$1 permanent;
+
+    location ~ ^(.*)\.(png|jpeg|jpg|gif|css|js)$ {
+        expires +365d;
+    }
+
+    location / {
+        index app.php;
+        try_files $uri @rewriteapp;
+    }
+
+    location @rewriteapp {
+        rewrite ^(.*)$ /app.php/$1 last;
+    }
+
+    location ~ ^/(app|app_dev|config)\.php(/|$) {
+        fastcgi_pass phpfcgi;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param  HTTPS off;
+    }
+}

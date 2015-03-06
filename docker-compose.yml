@@ -1,0 +1,33 @@
+nginx:
+  build: docker/nginx
+  links:
+    - phpfpm
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - config/nginx:/etc/nginx
+    - log/nginx:/var/log/nginx
+    - data/nginx:/home/http
+phpfpm:
+  build: docker/phpfpm
+  links:
+    - mariadb
+    - memcached
+  ports:
+    - "9000:9000"
+  volumes:
+    - data/php:/home/http
+mariadb:
+  build: docker/mariadb
+  ports:
+    - "3306:3306"
+  volumes:
+    - log/mariadb:/var/log/mysql
+    - data/mariadb:/var/lib/mysql
+  environment:
+    DB_ADMIN_PASS: pass
+memcached:
+  build: docker/memcached
+  ports:
+    - "11211:11211"
